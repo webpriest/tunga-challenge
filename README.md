@@ -1,67 +1,67 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+## TUNGA CODE CHALLENGE
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A program to import data from a large JSON file into a database using PHP in Laravel.
 
-## About Laravel
+Requirements:
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Clone the repo at [https://github.com/webpriest/tunga-challenge.git](https://github.com/webpriest/tunga-challenge.git).
+- Run `composer install` to pull dependencies.
+- Run `npm install && npm run dev` for the UI package.
+- Change **.env.example** to **.env** and set **DB_DATABASE=tunga_challenge**. 
+- Run `php artisan key:generate` to generate the APP_KEY.
+- Create database named **tunga_challenge** in MySQL or MariaDB, and run `php artisan migrate` to migrate tables to the just created database.
+- Run command `php artisan serve` to boot up the local server.
+- Access application with [http://localhost:8000](http://localhost:8000).
+- **Open a new CLI and run `php artisan queue:listen` to process all jobs and listen for further jobs _(keep it running for the entire process of testing)_.
+- On loaded page in the browser, click the **Choose file** or **Browse** button to select a large JSON file.
+- Click **IMPORT JSON** button to upload file for processing *(this may take few seconds, and a notification will be sent to the UI confirming that a queue job is running in the background)*
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Code Implementation
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+The entry page is found at **resources > views > index.blade.php**. It contains a form with browse and submit buttons. The elements are represented by components created from Laravel Breeze.
 
-## Learning Laravel
+It uses web routes located at **routes > web.php*. There are two (2) routes included. 
+- A GET route to display the upload form
+- A POST route to process the form request
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+The controller is located at **app > Http > Controllers > ProfileController**. This contains two (2) methods; **index()** and **store()**. The _index_ method returns the view containing the form, while the _store_ method receives and processes the form request.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Processing the File Upload
 
-## Laravel Sponsors
+A JSON file is sent to the store() method where there is an immediate test to verify that the file was sent. The process is outlined below:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+- **JsonMachine** is a Laravel package for parsing unpredictably large JSON files. It parses a json array into the $profiles variable. One of the major advantages of using JsonMachine, is to mitigate the problems associated with uploading unpredictable file sizes. There is no need to adjust the _memory limit_ in php.ini, as this kind of upload may be performed by a client whose action you cannot control. 
+- A **try - catch** block is used as a safety net for trying to process the records.
+- The _foreach_ loops through every record parsed from the JSON file.
+- The records are encoded into JSON and decoded immediately into an associative array for convenient looping.
+- Once decoded, it is sent as a job to the queue until all records have been captured from the JSON file. The challenge.json file used in the demo has about 10,000 records which took about 11 seconds to loop through _(depending on speed of the machine)_.
+- The method returns a success message to signify _no error_.
 
-### Premium Partners
+## The Background Queue Job
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[CMS Max](https://www.cmsmax.com/)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
-- **[Romega Software](https://romegasoftware.com)**
+The job is found in **app > Jobs > ImportData.php**. It takes a record as argument and uses the **handle()** method to queue the jobs. It first formats the `date_of_birth` values to a database-friendly format, and determines the _age_ using **Carbon**.
 
-## Contributing
+A control structure checks to see that the age is between 18 and 65 years. If true, the record is persisted to the database, otherwise, the record is ignored.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+There are two (2) database tables; **profiles** and **credit_cards** tables. A one-to-one relationship exists between the models.
 
-## Code of Conduct
+## Best Practices
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+The SOLID principle was adhered to in completing the task. 
+- Each class was created for a single purpose.
+- A class can be modified without breaking the code.
+- Classes were abstracted as much as possible.
+- The workflow implements the DRY principle.
 
-## Security Vulnerabilities
+## Task Requirements
+- You can mimic job termination using **CTRL + C** in the CLI where the `php artisan queue:listen` is running. Once stopped, re-run the queue:listen command to continue the jobs from where it stopped.
+- Only records matching age between 18 and 65 are persisted to the database.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Bonus
+- If the file size grows to a size 500 times the original size, the time complexity remains the same.
+- The filter on the _credit card_ to identify three (3) identical digits in sequence, requires a separate function that will be called in the handler to explode every digit of the card number into an array, and compare the digits (using the array pointer to keep track of the last value). It compares the last value with the next and iterates a counter. At the end of the loop, the iteration checks if it is three and returns true, otherwise false _(though this was not implemented in the code)_
 
-## License
+**Author: Theophilus Aika**
+**Slack: Theophilus_Tunga**
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 "# tunga-challenge" 
