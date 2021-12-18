@@ -14,7 +14,7 @@
 
             <h2 class="font-bold text-lg">{{ __('Upload JSON file') }}</h2>
             <div>
-                <x-input id="email" class="block mt-1 w-full" type="file" name="json_file" required/>
+                <x-input id="json_file" class="block mt-1 w-full" type="file" name="json_file"/>
             </div>
 
             <div class="flex items-center justify-end mt-4">

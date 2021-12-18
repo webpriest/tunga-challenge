@@ -34,7 +34,9 @@ class ImportData implements ShouldQueue
      */
     public function handle()
     {
+        // Format date
         $formatted_dob = strftime("%Y-%m-%d", strtotime($this->record['date_of_birth']));
+        // Derive age of person
         $age = Carbon::parse($formatted_dob)->diff(Carbon::now())->y;
 
         if ($age > 17 && $age < 66) {
@@ -46,7 +48,7 @@ class ImportData implements ShouldQueue
             $profile->email = $this->record['email'];
             $profile->interest = $this->record['interest'];
             $profile->account = $this->record['account'];
-            $profile->date_of_birth = $formatted_dob; // Format all dates of birth to Y-m-d format
+            $profile->date_of_birth = $formatted_dob; 
             $profile->checked = $this->record['checked'] ? 1 : 0;
             $profile->save();
     
@@ -58,5 +60,31 @@ class ImportData implements ShouldQueue
                 'expirationDate' => $this->record['credit_card']['expirationDate'],
             ]);
         }
+    }
+
+    protected function identicalDigits($credit_card)
+    {
+        $digits = str_split($credit_card);
+        $length = count($digits);
+
+        // 4929658516333072
+
+        for($i = 0; $i < $length; $i++) {
+            $digit_count = 1;
+            for($j = $i+1; $j < $length; $j++) {
+                if($digits[$i] === $digits[$j] && ($j < $length)){
+                    $digit_count++;   
+                }
+                
+                if(($j+1 < $length) && $digits[$i] === $digits[$j+1]) {
+                    $digit_count++;
+                    if($digit_count === 3) {
+                        return true;
+                    } 
+                }
+            }
+        }
+
+        return false;
     }
 }
