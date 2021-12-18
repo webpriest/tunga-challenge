@@ -59,9 +59,10 @@ The SOLID principle was adhered to in completing the task.
 
 ### Bonus
 - If the file size grows to a size 500 times the original size, the time complexity remains the same.
-- The filter on the _credit card_ to identify three (3) identical digits in sequence, requires a separate function that will be called in the handler to explode every digit of the card number into an array, and compare the digits (using the array pointer to keep track of the last value). It compares the last value with the next and iterates a counter. At the end of the loop, the iteration checks if it is three and returns true, otherwise false _(though this was not implemented in the code)_
+- The filter on the _credit card_ to identify three (3) identical digits in sequence, requires a separate function that will be called in the handler to explode every digit of the card number into an array, and compare the digits (using the array pointer to keep track of the last value). It compares the last value with the next and increments a counter. At the end of the loop, the iteration checks if it is three and returns true, otherwise false _(though this was not implemented in the code)_
 
 **Author: Theophilus Aika**
+
 **Slack: Theophilus_Tunga**
 
 "# tunga-challenge" 
